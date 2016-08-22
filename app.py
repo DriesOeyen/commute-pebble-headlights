@@ -87,11 +87,11 @@ def event(type):
 	if type == "location_work":
 		color = neopixel.Color(100, 255, 0)  # Orange
 	elif type == "location_home":
-		color = neopixel.Color(150, 0, 0)    # Green
+		color = neopixel.Color(100, 0, 0)    # Green
 	elif type == "home_work":
 		color = neopixel.Color(200, 255, 0)  # Light orange / yellow
 	elif type == "work_home":
-		color = neopixel.Color(255, 150, 0)  # Light green
+		color = neopixel.Color(255, 100, 0)  # Light green
 	elif type == "calendar":
 		color = neopixel.Color(150, 0, 255)  # Blue
 	elif type == "settings":
