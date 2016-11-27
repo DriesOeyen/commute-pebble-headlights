@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import flask
 import flask_cors
 import neopixel
@@ -98,7 +99,16 @@ def event(type):
 		color = neopixel.Color(0, 255, 50)   # Pink
 	else:
 		flask.abort(400)
-	
+
+	# At night, return without firing LED strip
+	now = datetime.datetime.now()
+	if now.isoweekday() < 6: # Weekdays
+		if now.hour < 8 or now.hour >= 22:
+			return ""
+	else: # Weekends
+		if now.hour < 10 or now.hour >= 23:
+			return ""
+
 	strip = strip_init()
 	strip_spread(strip, color)
 	return u"💡"
