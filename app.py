@@ -3,15 +3,9 @@
 """Commute Headlights: listens for Pub/Sub events and triggers LED strip."""
 
 import datetime
-import flask
-import flask_cors
 import neopixel
 import time
-
-
-# Configure Flask
-app = flask.Flask(__name__)
-flask_cors.CORS(app)
+from google.cloud import pubsub
 
 
 # Configure NeoPixel
@@ -21,6 +15,15 @@ LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA = 5       # DMA channel to use for generating signal (try 5)
 LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
 LED_INVERT = False   # True to invert the signal (when using NPN transistor level shift)
+
+# Configure Pub/Sub
+PUBSUB_PROJECT = "commute-pebble"
+PUBSUB_SUBSCRIPTION = "headlights"
+
+# Commute defines
+REQUEST_TYPE_LOCATION = "0"
+REQUEST_TYPE_HOME = "1"
+REQUEST_TYPE_WORK = "2"
 
 
 # NeoPixel LED strip functions
@@ -78,48 +81,84 @@ def strip_fade(strip, wait_ms=10):
     strip.show()
 
 
-# Handle requests
+# Listen for and handle Commute events
 
-if __name__ == '__main__':
-    # Init Flask
-    app.run()
-
-
-@app.route("/event/<type>")
-def event(type):
-    if type == "location_work":
+def fire_event(event_type):
+    """Display a Commute event on the LED strip."""
+    if event_type == "location_work":
         color = neopixel.Color(100, 255, 0)  # Orange
-    elif type == "location_home":
+    elif event_type == "location_home":
         color = neopixel.Color(100, 0, 0)    # Green
-    elif type == "home_work":
+    elif event_type == "home_work":
         color = neopixel.Color(200, 255, 0)  # Light orange / yellow
-    elif type == "work_home":
+    elif event_type == "work_home":
         color = neopixel.Color(255, 100, 0)  # Light green
-    elif type == "calendar":
+    elif event_type == "calendar":
         color = neopixel.Color(150, 0, 255)  # Blue
-    elif type == "settings":
+    elif event_type == "settings":
         color = neopixel.Color(0, 255, 50)   # Pink
+    elif event_type == "error":
+        color = neopixel.Color(0, 255, 0)  # Red
     else:
-        flask.abort(400)
+        return
 
     # At night, return without firing LED strip
     now = datetime.datetime.now()
     if now.isoweekday() < 6:  # Weekdays
         if now.hour < 8 or now.hour >= 22:
-            return ""
+            return
     else:  # Weekends
         if now.hour < 10 or now.hour >= 23:
-            return ""
+            return
 
     strip = strip_init()
-    strip_spread(strip, color)
-    return u"💡"
+    if event_type == "error":
+        strip_blink(strip, color)
+    else:
+        strip_spread(strip, color)
 
 
-@app.route("/error")
-def error():
-    color = neopixel.Color(0, 255, 0)  # Red
+def handle_event(e):
+    """Handle an incoming Commute event."""
+    # Identify event
+    if e.action == "directions":
+        if e.orig == REQUEST_TYPE_LOCATION and e.dest == REQUEST_TYPE_WORK:
+            event_type = "location_work"
+        elif e.orig == REQUEST_TYPE_LOCATION and e.dest == REQUEST_TYPE_HOME:
+            event_type = "location_home"
+        elif e.orig == REQUEST_TYPE_HOME and e.dest == REQUEST_TYPE_WORK:
+            event_type = "home_work"
+        elif e.orig == REQUEST_TYPE_WORK and e.dest == REQUEST_TYPE_HOME:
+            event_type = "work_home"
+        else:
+            return
+    else:
+        event_type = e.action
 
-    strip = strip_init()
-    strip_blink(strip, color)
-    return u"🚨"
+    # Fire event on LED strip
+    fire_event(event_type)
+
+
+def pubsub_listen(project, subscription_name):
+    """Listen for Commute events on Pub/Sub."""
+    subscriber = pubsub.SubscriberClient()
+    subscription_path = subscriber.subscription_path(project, subscription_name)
+
+    def pubsub_event(message):
+        event = message.attributes
+        handle_event(event)
+        message.ack()
+
+    # Limit the subscriber to only have 1 outstanding messages at a time.
+    flow_control = pubsub.types.FlowControl(max_messages=1)
+    subscriber.subscribe(subscription_path, callback=pubsub_event, flow_control=flow_control)
+
+    # The subscriber is non-blocking, so we must keep the main thread from
+    # exiting to allow it to process messages in the background.
+    print('Listening for events on {}'.format(subscription_path))
+    while True:
+        time.sleep(60)
+
+
+# Start Pub/Sub listen loop
+pubsub_listen(PUBSUB_PROJECT, PUBSUB_SUBSCRIPTION)
