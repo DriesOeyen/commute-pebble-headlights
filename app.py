@@ -108,7 +108,7 @@ def fire_event(event_type):
         if now.hour < 8 or now.hour >= 22:
             return
     else:  # Weekends
-        if now.hour < 10 or now.hour >= 23:
+        if now.hour < 10 or now.hour >= 22:
             return
 
     strip = strip_init()
