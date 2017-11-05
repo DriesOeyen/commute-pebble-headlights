@@ -121,19 +121,19 @@ def fire_event(event_type):
 def handle_event(e):
     """Handle an incoming Commute event."""
     # Identify event
-    if e.action == "directions":
-        if e.orig == REQUEST_TYPE_LOCATION and e.dest == REQUEST_TYPE_WORK:
+    if e['action'] == "directions":
+        if e['orig'] == REQUEST_TYPE_LOCATION and e['dest'] == REQUEST_TYPE_WORK:
             event_type = "location_work"
-        elif e.orig == REQUEST_TYPE_LOCATION and e.dest == REQUEST_TYPE_HOME:
+        elif e['orig'] == REQUEST_TYPE_LOCATION and e['dest'] == REQUEST_TYPE_HOME:
             event_type = "location_home"
-        elif e.orig == REQUEST_TYPE_HOME and e.dest == REQUEST_TYPE_WORK:
+        elif e['orig'] == REQUEST_TYPE_HOME and e['dest'] == REQUEST_TYPE_WORK:
             event_type = "home_work"
-        elif e.orig == REQUEST_TYPE_WORK and e.dest == REQUEST_TYPE_HOME:
+        elif e['orig'] == REQUEST_TYPE_WORK and e['dest'] == REQUEST_TYPE_HOME:
             event_type = "work_home"
         else:
             return
     else:
-        event_type = e.action
+        event_type = e['action']
 
     # Fire event on LED strip
     fire_event(event_type)
