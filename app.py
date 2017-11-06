@@ -86,19 +86,19 @@ def strip_fade(strip, wait_ms=10):
 def fire_event(event_type):
     """Display a Commute event on the LED strip."""
     if event_type == "location_work":
-        color = neopixel.Color(100, 255, 0)  # Orange
+        color = neopixel.Color(255, 100, 0)  # Orange
     elif event_type == "location_home":
-        color = neopixel.Color(100, 0, 0)    # Green
+        color = neopixel.Color(0, 100, 0)    # Green
     elif event_type == "home_work":
-        color = neopixel.Color(200, 255, 0)  # Light orange / yellow
+        color = neopixel.Color(255, 200, 0)  # Light orange / yellow
     elif event_type == "work_home":
-        color = neopixel.Color(255, 100, 0)  # Light green
+        color = neopixel.Color(100, 255, 0)  # Light green
     elif event_type == "calendar":
-        color = neopixel.Color(150, 0, 255)  # Blue
+        color = neopixel.Color(0, 150, 255)  # Blue
     elif event_type == "settings":
-        color = neopixel.Color(0, 255, 50)   # Pink
+        color = neopixel.Color(255, 0, 50)   # Pink
     elif event_type == "error":
-        color = neopixel.Color(0, 255, 0)  # Red
+        color = neopixel.Color(255, 0, 0)  # Red
     else:
         return
 
