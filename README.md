@@ -19,6 +19,7 @@ If you do want to proceed setting up this repo, here's some general pointers:
 
 - The setup was tested on a 1st-gen Raspberry Pi model B+.
 - You need an Adafruit NeoPixel-compatible LED strip. Tweak the default config in `app.py`.
+- Don't forget to install Python dependencies with `$ pip install -r requirements.txt`. You can use a virtualenv for this if you prefer.
 - The LED strip needs its own power supply. The data lines should be attached to the rPi's GPIO. Check the pinout scheme of your rPi model.
 - The latest version of this repo used Pub/Sub to communicate with the Commute server back-end. The `master` branch of the server back-end still relies on the deprecated App Engine Channels API. Switch to the `ferrari-6` branch for Pub/Sub support.
 - You can use a tool like Supervisor to run this script in the background: http://supervisord.org
